@@ -1,0 +1,113 @@
+{
+  "info": {
+    "_postman_id": "b1a7c1e2-3f4a-4c5d-8e9f-0a1b2c3d4e5f",
+    "name": "MCP Serverless Demo (MCP Server)",
+    "description": "Colección para probar el MCP server localmente por JSON-RPC sobre Streamable HTTP.\n\n- Endpoint: {{baseUrl}}/mcp\n- La app usa quarkus.mcp.server.http.streamable.auto-init=true, por lo que cada request es independiente: no hace falta reutilizar Mcp-Session-Id.\n- Para Cloud Run, cambiá {{baseUrl}} por https://<servicio>-<hash>.a.run.app\n- Requiere los headers Content-Type: application/json y Accept: application/json, text/event-stream.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "00 - Initialize (opcional)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Accept", "value": "application/json, text/event-stream" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 0,\n  \"method\": \"initialize\",\n  \"params\": {\n    \"protocolVersion\": \"2025-06-18\",\n    \"capabilities\": {},\n    \"clientInfo\": {\n      \"name\": \"postman\",\n      \"version\": \"1.0.0\"\n    }\n  }\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": "{{baseUrl}}/mcp",
+        "description": "Handshake MCP opcional. Con auto-init activo no es necesario para llamar a las tools."
+      }
+    },
+    {
+      "name": "01 - Tools/List",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Accept", "value": "application/json, text/event-stream" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 1,\n  \"method\": \"tools/list\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": "{{baseUrl}}/mcp",
+        "description": "Lista las tools expuestas por el MCP server junto con su JSON Schema."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 - Call calcular_cuota_prestamo",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Accept", "value": "application/json, text/event-stream" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 2,\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"calcular_cuota_prestamo\",\n    \"arguments\": {\n      \"principal\": 100000,\n      \"tasaAnualPct\": 12,\n      \"meses\": 36\n    }\n  }\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": "{{baseUrl}}/mcp",
+        "description": "Tool de dominio puro: cuota fija de un préstamo (sistema francés)."
+      }
+    },
+    {
+      "name": "03 - Call cotizacion_divisa (EUR)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Accept", "value": "application/json, text/event-stream" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 3,\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"cotizacion_divisa\",\n    \"arguments\": {\n      \"monedaBase\": \"USD\",\n      \"monedaDestino\": \"EUR\"\n    }\n  }\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": "{{baseUrl}}/mcp",
+        "description": "Tool con adapter de salida: cotización USD→EUR vía REST Client a open.er-api.com."
+      }
+    },
+    {
+      "name": "04 - Call cotizacion_divisa (PEN)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Accept", "value": "application/json, text/event-stream" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"jsonrpc\": \"2.0\",\n  \"id\": 4,\n  \"method\": \"tools/call\",\n  \"params\": {\n    \"name\": \"cotizacion_divisa\",\n    \"arguments\": {\n      \"monedaBase\": \"USD\",\n      \"monedaDestino\": \"PEN\"\n    }\n  }\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": "{{baseUrl}}/mcp",
+        "description": "Tool con adapter de salida: cotización USD→PEN (soles peruanos) vía REST Client a open.er-api.com."
+      }
+    }
+  ]
+}
